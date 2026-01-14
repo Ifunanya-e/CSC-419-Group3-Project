@@ -4,8 +4,10 @@ import RegisterForm from "../components/register/RegisterForm";
 import ConfirmProfileStep from "../components/register/ConfirmProfileStep";
 import WorkspaceStep from "../components/register/WorkspaceStep";
 import { createUser } from "../api/users";
+import { useNavigate } from "react-router-dom";
 
 export default function OnboardingFlow() {
+  const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -26,13 +28,14 @@ async function handleFinalSubmit() {
   setError("");
 
   try {
-    // You can make a final API call here if needed to update workspace
-    // Or just proceed to the dashboard/success page
-    
     console.log("Final submission data:", formData);
     
-    // TODO: Navigate to dashboard or success page
-    alert("Registration completed successfully!");
+    // Navigate to dashboard based on role
+    if (formData.role === "Staff" || formData.role === "staff") {
+      navigate("/dashboard");
+    } else {
+      navigate("/dashboard");
+    }
     
   } catch (err) {
     setError("Failed to complete registration. Please try again.");

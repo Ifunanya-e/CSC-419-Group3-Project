@@ -217,7 +217,7 @@ function RegisterForm({ formData = {}, setFormData, onContinue, isLoading, error
             ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-[#02063E] text-white hover:bg-[#03074d]"}
           `}
         >
-          <span>{isLoading ? "Creating account..." : "Continue"}</span>
+          <span>{isLoading ? "Loading..." : "Continue"}</span>
           {!isLoading && <FaArrowRight />}
         </button>
       </form>

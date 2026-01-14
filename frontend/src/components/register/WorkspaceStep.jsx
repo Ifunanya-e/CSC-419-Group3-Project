@@ -43,12 +43,12 @@ export default function WorkspaceStep({ formData, setFormData, onBack, onSubmit,
               onClick={() => selectWorkspace({ id: 1, name: "Pan-Atlantic University" })}
               className={`border-2 rounded-xl p-4 flex justify-between cursor-pointer transition-all ${
                 selectedWorkspace?.id === 1
-                  ? "border-[#02063E] bg-blue-50"
+                  ? "border-[#02063E] bg-[#02063E] text-white"
                   : "border-gray-300 hover:border-[#02063E]"
               }`}
             >
               <span className="font-medium">Pan-Atlantic University</span>
-              <span className="text-[#02063E] font-bold text-xl">
+              <span className="text-white font-bold text-xl">
                 {selectedWorkspace?.id === 1 ? "✓" : "+"}
               </span>
             </div>
@@ -57,12 +57,12 @@ export default function WorkspaceStep({ formData, setFormData, onBack, onSubmit,
               onClick={() => selectWorkspace({ id: 2, name: "Caterpillar Warehouse" })}
               className={`border-2 rounded-xl p-4 flex justify-between cursor-pointer transition-all ${
                 selectedWorkspace?.id === 2
-                  ? "border-[#02063E] bg-blue-50"
+                  ? "border-[#02063E] bg-[#02063E] text-white"
                   : "border-gray-300 hover:border-[#02063E]"
               }`}
             >
               <span className="font-medium">Caterpillar Warehouse</span>
-              <span className="text-[#02063E] font-bold text-xl">
+              <span className="text-white font-bold text-xl">
                 {selectedWorkspace?.id === 2 ? "✓" : "+"}
               </span>
             </div>
