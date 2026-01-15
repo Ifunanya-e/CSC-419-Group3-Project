@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import logo from "../../assets/Group1.png";
 import MobileSteps from "./MobileSteps";
@@ -222,14 +223,15 @@ function RegisterForm({ formData = {}, setFormData, onContinue, isLoading, error
         </button>
       </form>
 
-      {/* Footer */}
-      <p className="text-sm text-gray-600 mt-6 text-center">
-        Already have an account?{" "}
-        <a href="#" className="text-[#02063E] font-semibold hover:underline">
-          Sign in
-        </a>
-      </p>
+        {/* Footer */}
+        <p className="text-sm text-gray-500 mt-6 text-center">
+          Already have an account?{" "}
+          <Link to="/signin" className="text-[#02063E] font-medium hover:underline">
+            Sign in
+          </Link>
+        </p>
 
+        
       {/* Mobile Step Tracker */}
       <div className="lg:hidden">
         <MobileSteps activeStep={1} />

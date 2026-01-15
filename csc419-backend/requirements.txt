@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+alembic
+python-dotenv
+passlib[argon2]
+argon2-cffi
+sqlmodel
+python-jose
+pydantic
