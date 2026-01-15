@@ -67,7 +67,7 @@ def update_orderitem(
 def delete_orderitem(
     orderitem_id: int,
     session: Session = Depends(get_session),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_admin_or_manager)
 ):
     orderitem = session.get(OrderItem, orderitem_id)
     if not orderitem:

@@ -71,7 +71,7 @@ def update_supplier(
 def delete_supplier(
     id: int,
     session: Session = Depends(get_session),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_admin_or_manager)
 ):
     supplier = session.get(Supplier, id)
     if not supplier:

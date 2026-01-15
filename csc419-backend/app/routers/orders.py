@@ -67,7 +67,7 @@ def update_order(
 def delete_order(
     id: int,
     session: Session = Depends(get_session),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_admin_or_manager)
 ):
     order = session.get(Order, id)
     if not order:

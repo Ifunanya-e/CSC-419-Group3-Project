@@ -94,7 +94,7 @@ def update_product(
 def delete_product(
     id: int,
     session: Session = Depends(get_session),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_admin_or_manager)
 ):
     product = session.get(Product, id)
     if not product:

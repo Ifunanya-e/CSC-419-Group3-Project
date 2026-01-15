@@ -4,7 +4,7 @@ from app.core.database import get_session
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate, UpdatePasswordRequest
 from app.services.users import create_user
-from app.dependencies.auth import require_admin
+from app.dependencies.auth import require_admin, require_admin_or_manager
 from app.core.security import hash_password, verify_password
 from app.dependencies.auth import get_current_user
 
@@ -18,7 +18,7 @@ router = APIRouter(
 @router.get("/", response_model=list[UserRead])
 def read_users(
     session: Session = Depends(get_session),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_admin_or_manager)
 ):
     return session.exec(select(User)).all()
 
@@ -45,7 +45,7 @@ def new_user(
 def get_user(
     user_id: int,
     session: Session = Depends(get_session),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_admin_or_manager)
 ):
     user = session.get(User, user_id)
     if not user:
@@ -61,7 +61,7 @@ def update_user(
     id: int,
     user_in: UserUpdate,
     session: Session = Depends(get_session),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_admin_or_manager)
 ):
     user = session.get(User, id)
     if not user:
@@ -95,7 +95,7 @@ def update_my_password(
 def delete_user(
     id: int,
     session: Session = Depends(get_session),
-    current_user=Depends(require_admin)
+    current_user=Depends(require_admin_or_manager)
 ):
     user = session.get(User, id)
     if not user:
