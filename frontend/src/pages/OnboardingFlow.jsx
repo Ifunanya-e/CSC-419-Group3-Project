@@ -55,7 +55,7 @@ async function handleFinalSubmit() {
   }
 }
 
-  // STEP 1 — Register user
+ 
   async function handleRegister() {
     setIsLoading(true);
     setError("");

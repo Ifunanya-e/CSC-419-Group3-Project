@@ -73,6 +73,7 @@ export default function ConfirmProfileStep({ formData, setFormData, onBack, onCo
               <option value="">Select role</option>
               <option value="Admin">Admin</option>
               <option value="Staff">Staff</option>
+              <option value="Manager">Manager</option>
             </select>
           </div>
         </div>

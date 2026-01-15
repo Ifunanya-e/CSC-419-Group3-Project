@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaBell, FaSearch, FaBars, FaTimes } from "react-icons/fa";
 import logo from "../assets/Group1.png";
 import { useAuth } from "../context/AuthContext";
+import { searchProducts, getLowStockProducts } from "../api/products";
 
 export default function StaffDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [isLoadingLowStock, setIsLoadingLowStock] = useState(true);
   
   // Get the actual logged-in user
   const { user } = useAuth();
-
-  console.log("User from useAuth:", user);
-  console.log("User full_name:", user?.full_name);
-  console.log("User email:", user?.email);
-  console.log("User role:", user?.role);
-
 
   // Use real user data or fallback to defaults
   const displayUser = {
@@ -22,6 +22,47 @@ export default function StaffDashboard() {
     role: user?.role || "Staff",
     email: user?.email || "user@example.com"
   };
+
+  // Fetch low stock products on component mount
+  useEffect(() => {
+    async function fetchLowStock() {
+      try {
+        const lowStockItems = await getLowStockProducts();
+        // Count the number of low stock items
+        setLowStockCount(Array.isArray(lowStockItems) ? lowStockItems.length : 0);
+      } catch (error) {
+        console.error("Failed to fetch low stock items:", error);
+        setLowStockCount(0);
+      } finally {
+        setIsLoadingLowStock(false);
+      }
+    }
+
+    fetchLowStock();
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Handle search
+  async function handleSearch(query) {
+    setSearchQuery(query);
+    
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await searchProducts(query);
+      setSearchResults(results);
+      setShowResults(true);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -123,17 +164,63 @@ export default function StaffDashboard() {
             </button>
 
             {/* Search */}
-            <div className="flex-1 max-w-xl">
+            <div className="flex-1 max-w-xl relative">
               <div className="relative">
                 <FaSearch className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm md:text-base" />
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Search for products"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onFocus={() => searchResults.length > 0 && setShowResults(true)}
                   className="w-full pl-10 md:pl-12 pr-3 md:pr-4 py-2 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02063E]"
                 />
               </div>
+
+              {/* Search Results Dropdown */}
+              {showResults && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50">
+                  {isSearching ? (
+                    <div className="p-4 text-center text-gray-500">
+                      Searching...
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div className="divide-y">
+                      {searchResults.map((product, index) => (
+                        <div
+                          key={index}
+                          className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => {
+                            setShowResults(false);
+                            // Handle product selection here
+                            console.log("Selected product:", product);
+                          }}
+                        >
+                          <p className="font-medium text-sm">{product.name || product.title}</p>
+                          {product.description && (
+                            <p className="text-xs text-gray-500 mt-1">{product.description}</p>
+                          )}
+                          {product.price && (
+                            <p className="text-xs text-[#02063E] font-semibold mt-1">
+                              ${product.price}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No products found
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setShowResults(false)}
+                    className="w-full p-2 text-xs text-gray-600 hover:bg-gray-50 border-t"
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Right side */}
@@ -172,7 +259,13 @@ export default function StaffDashboard() {
             {/* Alert Card */}
             <div className="bg-gray-200 rounded-2xl p-6 md:p-8 min-h-[120px] md:min-h-[150px] relative">
               <p className="text-red-600 font-bold mb-2">ALERT</p>
-              <p className="text-red-600 font-semibold text-sm md:text-base">4 Stocks are LOW</p>
+              {isLoadingLowStock ? (
+                <p className="text-gray-600 font-semibold text-sm md:text-base">Loading...</p>
+              ) : (
+                <p className="text-red-600 font-semibold text-sm md:text-base">
+                  {lowStockCount} {lowStockCount === 1 ? 'Stock is' : 'Stocks are'} LOW
+                </p>
+              )}
               <svg className="absolute bottom-4 right-4 w-24 h-16 md:w-32 md:h-20" viewBox="0 0 100 50">
                 <polyline
                   points="0,25 20,20 40,15 60,30 80,35 100,45"
