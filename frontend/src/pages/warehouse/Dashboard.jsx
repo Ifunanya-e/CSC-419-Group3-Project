@@ -33,7 +33,7 @@ function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
                     {/* New Pickup Card */}
                     <a 
-                        onClick={() => navigate('/pickup')}
+                        onClick={() => navigate('/staff/pickup')}
                         className="bg-gray-300 rounded-lg p-8 cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center"
                     >
                         <p className="text-[#000435] text-2xl font-semibold">NEW PICKUP</p>
