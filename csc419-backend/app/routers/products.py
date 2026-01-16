@@ -70,17 +70,21 @@ def get_product(
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
+from app.schemas.product import ProductCreate, ProductRead, ProductUpdate # Ensure ProductUpdate is imported
+
 @router.patch("/{product_id}", response_model=ProductRead)
 def update_product(
-    id: int,
-    product_in: ProductCreate,
+    product_id: int,                  # 1. Changed 'id' to 'product_id' to match the path
+    product_in: ProductUpdate,        # 2. Changed 'ProductCreate' to 'ProductUpdate'
     session: Session = Depends(get_session),
     current_user=Depends(require_admin_or_manager)
 ):
-    product = session.get(Product, id)
+    # 3. Use 'product_id' here to fetch the record
+    product = session.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
+    # This logic correctly applies only the fields sent by the frontend
     product_data = product_in.model_dump(exclude_unset=True)
     for key, value in product_data.items():
         setattr(product, key, value)
