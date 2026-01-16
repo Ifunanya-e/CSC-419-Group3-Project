@@ -1,5 +1,4 @@
-import stat
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 from app import models
 from app.core.database import get_session
@@ -94,8 +93,8 @@ def update_product(
 
 
 
-@router.delete("/{product_id}", status_code=stat.HTTP_204_NO_CONTENT)
-def delete_product(product_id: int, db: Session = Depends(get_me)):
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_product(product_id: int, db: Session = Depends(get_session), current_user = Depends(require_admin)):
     # 1. Fetch the product
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     
@@ -111,6 +110,6 @@ def delete_product(product_id: int, db: Session = Depends(get_me)):
         # 3. Handle the foreign key conflict
         db.rollback()
         raise HTTPException(
-            status_code=stat.HTTP_400_BAD_REQUEST, 
+            status_code=status.HTTP_400_BAD_REQUEST, 
             detail="Cannot delete product. It is currently linked to existing order items. Remove those first."
         )
