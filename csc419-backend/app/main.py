@@ -4,9 +4,11 @@ from app.routers import users, suppliers, products, orders, orderitems, auth
 
 app = FastAPI(debug=True)
 
+origins = ["http://localhost:5173",]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins= origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
