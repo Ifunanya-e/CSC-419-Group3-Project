@@ -1,13 +1,16 @@
 import axios from "axios";
 
+// Access the environment variable
+const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+// Set a logical fallback only if the variable is missing
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: envBaseUrl || "https://csc419-backend.onrender.com", 
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Add a request interceptor to include the token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -16,9 +19,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
