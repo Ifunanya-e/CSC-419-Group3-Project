@@ -98,21 +98,19 @@ def update_product(
 
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product(product_id: int, db: Session = Depends(get_session), current_user = Depends(require_admin)):
-    # 1. Fetch the product
-    product = db.query(models.product).filter(models.product.id == product_id).first()
+def delete_product(product_id: int, session: Session = Depends(get_session), current_user = Depends(require_admin)):
+    # Use session.get() - it's cleaner and safer
+    product = session.get(Product, product_id)
     
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
     try:
-        # 2. Attempt deletion
-        db.delete(product)
-        db.commit()
+        session.delete(product)
+        session.commit()
         return None
     except Exception:
-        # 3. Handle the foreign key conflict
-        db.rollback()
+        session.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail="Cannot delete product. It is currently linked to existing order items. Remove those first."

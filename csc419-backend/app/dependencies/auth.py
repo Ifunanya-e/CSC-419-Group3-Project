@@ -14,18 +14,22 @@ def get_current_user(
 
     token = credentials.credentials
 
-    payload = decode_access_token(token)
+    try:
+        # Try to decode the token
+        payload = decode_access_token(token)
+    except ValueError:
+        # If it fails (expired or invalid signature), return 401 instead of crashing
+        raise HTTPException(status_code=401, detail="Invalid token or expired")
 
     user_id = payload.get("sub")
     if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token payload")
 
     user = session.get(User, int(user_id))
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
-
 
 def require_admin_or_manager(
         current_user: User = Depends(get_current_user),
