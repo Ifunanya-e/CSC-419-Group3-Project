@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { FaBell, FaSearch, FaBars, FaTimes, FaCog } from "react-icons/fa";
+import { FaBell, FaSearch, FaBars, FaTimes, FaCog, FaPlus, FaTrash } from "react-icons/fa";
 import logo from "../assets/Group1.png";
 import { useAuth } from "../context/AuthContext";
 import { searchProducts, getLowStockProducts } from "../api/products";
+import api from "../api/client";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -12,6 +13,12 @@ export default function ManagerDashboard() {
   const [showResults, setShowResults] = useState(false);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [isLoadingLowStock, setIsLoadingLowStock] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [pendingOrders, setPendingOrders] = useState(0);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
+  const [products, setProducts] = useState([]);
   
   const { user } = useAuth();
 
@@ -29,13 +36,61 @@ export default function ManagerDashboard() {
         setLowStockCount(Array.isArray(lowStockItems) ? lowStockItems.length : 0);
       } catch (error) {
         console.error("Failed to fetch low stock items:", error);
-        setLowStockCount(4); // Fallback for testing
+        setLowStockCount(0);
       } finally {
         setIsLoadingLowStock(false);
       }
     }
 
     fetchLowStock();
+  }, []);
+
+  // Fetch total products count
+  useEffect(() => {
+    async function fetchProductsCount() {
+      try {
+        const response = await api.get("/products/");
+        setTotalProducts(Array.isArray(response.data) ? response.data.length : 0);
+      } catch (error) {
+        console.error("Failed to fetch products count:", error);
+        setTotalProducts(0);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    }
+
+    fetchProductsCount();
+  }, []);
+
+  // Fetch pending orders count
+  useEffect(() => {
+    async function fetchOrdersCount() {
+      try {
+        const response = await api.get("/orders/");
+        setPendingOrders(Array.isArray(response.data) ? response.data.length : 0);
+      } catch (error) {
+        console.error("Failed to fetch orders count:", error);
+        setPendingOrders(0);
+      } finally {
+        setIsLoadingOrders(false);
+      }
+    }
+
+    fetchOrdersCount();
+  }, []);
+
+  // Fetch products for order creation
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const response = await api.get("/products/");
+        setProducts(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    }
+
+    fetchProducts();
   }, []);
 
   // Handle search
@@ -93,9 +148,8 @@ export default function ManagerDashboard() {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
-          
           <a
-            href="#"
+            href="/manager-dashboard"
             className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/10 text-white"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -103,9 +157,8 @@ export default function ManagerDashboard() {
             <span className="font-medium">Dashboard</span>
           </a>
 
-          
           <a
-            href="#"
+            href="/inventory-management"
             className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-white/80 hover:text-white transition-colors"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -113,7 +166,6 @@ export default function ManagerDashboard() {
             <span className="font-medium">Inventory Management</span>
           </a>
 
-          
           <a
             href="#"
             className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-white/80 hover:text-white transition-colors"
@@ -228,7 +280,10 @@ export default function ManagerDashboard() {
             <button className="bg-[#02063E] text-white px-6 md:px-8 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-semibold hover:bg-[#03074d] transition-colors">
               Scan Barcode
             </button>
-            <button className="bg-[#02063E] text-white px-6 md:px-8 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-semibold hover:bg-[#03074d] transition-colors">
+            <button 
+              onClick={() => setShowCreateOrderModal(true)}
+              className="bg-[#02063E] text-white px-6 md:px-8 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-semibold hover:bg-[#03074d] transition-colors"
+            >
               Create Order
             </button>
           </div>
@@ -238,8 +293,14 @@ export default function ManagerDashboard() {
             {/* Total Inventory Card */}
             <div className="bg-gray-200 rounded-2xl p-6 md:p-8 min-h-[120px] md:min-h-[150px]">
               <p className="text-sm text-gray-700 mb-2">Total Inventory</p>
-              <p className="text-4xl md:text-5xl font-bold text-[#02063E] mb-2">2,700</p>
-              <p className="text-xs text-gray-600">ITEMS</p>
+              {isLoadingProducts ? (
+                <p className="text-2xl font-bold text-gray-600">Loading...</p>
+              ) : (
+                <>
+                  <p className="text-4xl md:text-5xl font-bold text-[#02063E] mb-2">{totalProducts.toLocaleString()}</p>
+                  <p className="text-xs text-gray-600">ITEMS</p>
+                </>
+              )}
               {/* Semicircle gauge placeholder */}
               <div className="mt-4 flex justify-center">
                 <div className="w-32 h-16 border-t-8 border-l-8 border-r-8 border-[#02063E] rounded-t-full"></div>
@@ -269,7 +330,11 @@ export default function ManagerDashboard() {
             {/* Pending Orders Card */}
             <div className="bg-gray-200 rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center min-h-[120px] md:min-h-[150px]">
               <p className="text-xs md:text-sm text-gray-700 mb-2">Pending Orders</p>
-              <p className="text-5xl md:text-6xl font-bold text-[#02063E]">57</p>
+              {isLoadingOrders ? (
+                <p className="text-2xl font-bold text-gray-600">Loading...</p>
+              ) : (
+                <p className="text-5xl md:text-6xl font-bold text-[#02063E]">{pendingOrders}</p>
+              )}
             </div>
 
             {/* SKU Count Card */}
@@ -324,6 +389,234 @@ export default function ManagerDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Create Order Modal */}
+      {showCreateOrderModal && (
+        <CreateOrderModal
+          onClose={() => setShowCreateOrderModal(false)}
+          products={products}
+          userId={user?.id}
+          onSuccess={() => {
+            setShowCreateOrderModal(false);
+            // Refresh orders count
+            api.get("/orders/").then(response => {
+              setPendingOrders(Array.isArray(response.data) ? response.data.length : 0);
+            });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Create Order Modal Component
+function CreateOrderModal({ onClose, products, userId, onSuccess }) {
+  const [orderType, setOrderType] = useState("inbound");
+  const [orderItems, setOrderItems] = useState([{ product_id: "", quantity: 1, price: 0 }]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  function addItem() {
+    setOrderItems([...orderItems, { product_id: "", quantity: 1, price: 0 }]);
+  }
+
+  function removeItem(index) {
+    setOrderItems(orderItems.filter((_, i) => i !== index));
+  }
+
+  function updateItem(index, field, value) {
+    const updated = [...orderItems];
+    updated[index][field] = value;
+    setOrderItems(updated);
+  }
+
+  function calculateTotal() {
+    return orderItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      // Validate items
+      const validItems = orderItems.filter(item => item.product_id && item.quantity > 0 && item.price > 0);
+      
+      if (validItems.length === 0) {
+        setError("Please add at least one valid item");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create order
+      const orderPayload = {
+        type: orderType,
+        created_by: userId,
+        total_amount: calculateTotal()
+      };
+
+      const orderResponse = await api.post("/orders/", orderPayload);
+      const orderId = orderResponse.data.id;
+
+      // Add order items
+      for (const item of validItems) {
+        await api.post("/orderitems/", {
+          quantity: parseInt(item.quantity),
+          price_at_transaction: parseFloat(item.price),
+          order_id: orderId,
+          product_id: parseInt(item.product_id)
+        });
+      }
+
+      onSuccess();
+    } catch (err) {
+      console.error("Failed to create order:", err);
+      setError(err.response?.data?.detail || "Failed to create order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 md:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Create Order</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <FaTimes className="text-xl" />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Order Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Order Type *
+            </label>
+            <select
+              value={orderType}
+              onChange={(e) => setOrderType(e.target.value)}
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#02063E]"
+              required
+            >
+              <option value="inbound">Inbound (Receiving Inventory)</option>
+              <option value="outbound">Outbound (Shipping Out)</option>
+            </select>
+          </div>
+
+          {/* Order Items */}
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <label className="text-sm font-medium text-gray-700">
+                Order Items *
+              </label>
+              <button
+                type="button"
+                onClick={addItem}
+                className="text-sm text-[#02063E] font-semibold hover:underline flex items-center gap-1"
+              >
+                <FaPlus className="text-xs" />
+                Add Item
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {orderItems.map((item, index) => (
+                <div key={index} className="flex gap-2 items-start p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <select
+                      value={item.product_id}
+                      onChange={(e) => updateItem(index, "product_id", e.target.value)}
+                      className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#02063E]"
+                      required
+                    >
+                      <option value="">Select Product</option>
+                      {products.map(product => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} - {product.sku}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="number"
+                      placeholder="Quantity"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, "quantity", e.target.value)}
+                      className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#02063E]"
+                      min="1"
+                      required
+                    />
+
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="Price"
+                      value={item.price}
+                      onChange={(e) => updateItem(index, "price", e.target.value)}
+                      className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#02063E]"
+                      min="0"
+                      required
+                    />
+                  </div>
+
+                  {orderItems.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeItem(index)}
+                      className="text-red-600 hover:text-red-800 p-2"
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Total Amount */}
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-semibold">Total Amount:</span>
+              <span className="text-2xl font-bold text-[#02063E]">
+                ${calculateTotal().toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                isSubmitting
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-[#02063E] text-white hover:bg-[#03074d]'
+              }`}
+            >
+              {isSubmitting ? "Creating Order..." : "Create Order"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

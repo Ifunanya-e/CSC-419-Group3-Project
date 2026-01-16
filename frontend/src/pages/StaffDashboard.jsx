@@ -3,6 +3,7 @@ import { FaBell, FaSearch, FaBars, FaTimes } from "react-icons/fa";
 import logo from "../assets/Group1.png";
 import { useAuth } from "../context/AuthContext";
 import { searchProducts, getLowStockProducts } from "../api/products";
+import api from "../api/client";
 
 export default function StaffDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -12,6 +13,8 @@ export default function StaffDashboard() {
   const [showResults, setShowResults] = useState(false);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [isLoadingLowStock, setIsLoadingLowStock] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   
   // Get the actual logged-in user
   const { user } = useAuth();
@@ -40,6 +43,23 @@ export default function StaffDashboard() {
 
     fetchLowStock();
   }, []); // Empty dependency array means this runs once on mount
+
+  // Fetch total products count
+  useEffect(() => {
+    async function fetchProductsCount() {
+      try {
+        const response = await api.get("/products/");
+        setTotalProducts(Array.isArray(response.data) ? response.data.length : 0);
+      } catch (error) {
+        console.error("Failed to fetch products count:", error);
+        setTotalProducts(0);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    }
+
+    fetchProductsCount();
+  }, []);
 
   // Handle search
   async function handleSearch(query) {

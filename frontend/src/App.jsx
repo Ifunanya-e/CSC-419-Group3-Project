@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import OnboardingFlow from "./pages/OnboardingFlow";
 import StaffDashboard from "./pages/StaffDashboard";
 import ManagerDashboard from "./pages/ManagerDashboard";
+import InventoryManagement from "./pages/InventoryManagement";
 import ProductPage from "./pages/warehouse/productPage";
 import OrderSummary from "./pages/warehouse/orderSummary";
 import Pickup from "./pages/warehouse/pickup";
@@ -18,6 +19,7 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/dashboard" element={<StaffDashboard />} />
           <Route path="/manager-dashboard" element={<ManagerDashboard />} />
+          <Route path="/inventory-management" element={<InventoryManagement />} />
           
           {/* Warehouse routes */}
           <Route path="/products" element={<ProductPage />} />

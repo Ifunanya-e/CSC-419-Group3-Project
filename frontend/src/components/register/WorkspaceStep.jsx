@@ -1,6 +1,7 @@
 import { FaArrowLeft } from "react-icons/fa";
 import { useState } from "react";
 import logo from "../../assets/Group1.png";
+import { Link } from "react-router-dom";
 
 export default function WorkspaceStep({ formData, setFormData, onBack, onSubmit, isLoading }) {
   const [selectedWorkspace, setSelectedWorkspace] = useState(formData.workspace);
@@ -98,9 +99,9 @@ export default function WorkspaceStep({ formData, setFormData, onBack, onSubmit,
       {/* Footer */}
       <p className="text-sm text-gray-600 mt-6 text-center">
        Already have an account?{" "}
-        <a href="#" className="text-[#02063E] font-semibold hover:underline">
+        <Link to="/signin" className="text-[#02063E] font-semibold hover:underline">
           Sign in
-        </a>
+        </Link>
       </p>
     </div>
   );

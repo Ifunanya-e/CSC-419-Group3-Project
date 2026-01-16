@@ -25,6 +25,25 @@ export default function OnboardingFlow() {
   });
 
   // Add this function in OnboardingFlow.jsx
+// Step 1 - Just validate and move to next step (don't create user yet)
+async function handleRegister() {
+  setIsLoading(true);
+  setError("");
+
+  try {
+    // Just validate the form data and move to next step
+    // Don't create the user yet
+    
+    setActiveStep(2);
+  } catch (err) {
+    setError("Registration failed. Please check your details and try again.");
+    console.error("Registration error:", err);
+  } finally {
+    setIsLoading(false);
+  }
+}
+
+// Step 3 - Create user with correct role and login
 async function handleFinalSubmit() {
   setIsLoading(true);
   setError("");
@@ -32,18 +51,30 @@ async function handleFinalSubmit() {
   try {
     console.log("Final submission data:", formData);
     
-    // Save user data to context
-    const userData = {
+    // NOW create the user with the correct role
+    const payload = {
       full_name: `${formData.firstName} ${formData.lastName}`,
       email: formData.email,
-      role: formData.role,
+      password: formData.password,
+      role: formData.role, // Use the selected role from step 2
+    };
+
+    await createUser(payload);
+    
+    // Login to get token
+    await login(formData.email, formData.password);
+    
+    // Save user data to context
+    const userData = {
+      full_name: payload.full_name,
+      email: payload.email,
+      role: payload.role,
       workspace: formData.workspace
     };
     
     saveUserAfterRegistration(userData);
     
     console.log("Saved user data:", userData);
-    console.log("User role:", formData.role);
     
     // Navigate based on role
     const userRole = formData.role?.toLowerCase();
@@ -63,31 +94,6 @@ async function handleFinalSubmit() {
     setIsLoading(false);
   }
 }
- 
-  async function handleRegister() {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const payload = {
-        full_name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        password: formData.password,
-        role: "staff",
-      };
-
-      await createUser(payload);
-
-      setActiveStep(2);
-    } catch (err) {
-  const errorMessage = err.message || "Registration failed. Please check your details and try again.";
-  setError(errorMessage);
-  console.error("Registration error:", err);
-} finally {
-      setIsLoading(false);
-    }
-  }
-
   return (
     <div className="min-h-screen flex">
       {/* Left info card (desktop only) */}
