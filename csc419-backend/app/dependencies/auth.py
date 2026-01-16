@@ -30,7 +30,7 @@ def get_current_user(
 def require_admin_or_manager(
         current_user: User = Depends(get_current_user),
 ) -> User:
-    if current_user.role not in ("admin", "manager"):
+    if current_user.role not in ("admin", "manager", "Admin", "Manager"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="admin or manager only",
