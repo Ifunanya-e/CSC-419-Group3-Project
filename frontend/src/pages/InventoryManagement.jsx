@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FaBell, FaSearch, FaBars, FaTimes, FaCog, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import logo from "../assets/Group1.png";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 
 export default function InventoryManagement() {
@@ -14,7 +15,8 @@ export default function InventoryManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const displayUser = {
     name: user?.full_name || user?.email?.split('@')[0] || "Manager",
@@ -181,15 +183,24 @@ export default function InventoryManagement() {
             <span className="text-xl">📦</span>
             <span className="font-medium">Inventory Management</span>
           </a>
-
-          <a
-            href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-white/80 hover:text-white transition-colors"
-          >
-            <span className="text-xl">🚚</span>
-            <span className="font-medium">Shipment</span>
-          </a>
         </nav>
+
+        <div className="p-4 space-y-3">
+          {/* Logout Button */}
+          <button
+            onClick={() => {
+              logout();
+              navigate('/signin');
+            }}
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg transition-colors hover:bg-red-600 bg-red-500/20 hover:bg-red-600/30 text-red-400 hover:text-red-300"
+            title="Logout"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+            </svg>
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
 
         <div className="p-4 border-t border-white/10">
           <div className="flex items-center gap-3">

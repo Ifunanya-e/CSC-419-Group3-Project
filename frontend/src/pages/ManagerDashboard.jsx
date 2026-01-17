@@ -179,15 +179,21 @@ export default function ManagerDashboard() {
           
      
 
-          {/* Logout Button */}
+        </nav>
+
+        {/* Logout Button Section */}
+        <div className="p-4 space-y-3">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600/20 text-white/80 hover:text-white transition-colors mt-4"
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg transition-colors hover:bg-red-600 bg-red-500/20 hover:bg-red-600/30 text-red-400 hover:text-red-300"
+            title="Logout"
           >
-
-            <span className="font-medium text-red-600">Logout</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+            </svg>
+            <span className="font-medium">Logout</span>
           </button>
-        </nav>
+        </div>
 
         {/* User Profile */}
         <div className="p-4 border-t border-white/10">
