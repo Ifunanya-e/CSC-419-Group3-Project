@@ -185,11 +185,11 @@ function UserRoles() {
 
     return (
         <AdminLayout>
-            <div className="p-4 md:p-6">
+            <div className="p-2 sm:p-4 md:p-6 max-w-full overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Employees</h2>
-                    <button className="flex items-center space-x-2 px-6 py-3 bg-[#000435] text-white rounded-lg hover:bg-[#000525] transition-colors">
+                    <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-[#000435] text-white rounded-lg hover:bg-[#000525] transition-colors w-full sm:w-auto">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
@@ -210,14 +210,14 @@ function UserRoles() {
                 )}
 
                 {/* Filters */}
-                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                    <div className="flex items-center space-x-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                         {/* Sort by Emp ID */}
-                        <div className="relative">
+                        <div className="relative w-full sm:w-auto">
                             <select 
                                 value={sortBy}
                                 onChange={(e) => handleSortChange(e.target.value)}
-                                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 w-full"
                             >
                                 <option value="empId">Sort By: Emp ID</option>
                                 <option value="name">Sort By: Name</option>
@@ -229,11 +229,11 @@ function UserRoles() {
                         </div>
 
                         {/* Sort by Role */}
-                        <div className="relative">
+                        <div className="relative w-full sm:w-auto">
                             <select 
                                 value={filterRole}
                                 onChange={(e) => handleRoleFilterChange(e.target.value)}
-                                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 w-full"
                             >
                                 <option value="all">Sort By: Role</option>
                                 <option value="admin">Admin</option>
@@ -247,7 +247,7 @@ function UserRoles() {
                     </div>
 
                     {/* Filter Button */}
-                    <button className="flex items-center space-x-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <button className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto">
                         <span className="text-sm font-medium text-gray-700">Filter</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-gray-600">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
@@ -261,7 +261,7 @@ function UserRoles() {
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th className="px-6 py-4 text-left">
+                                    <th className="px-2 sm:px-4 md:px-6 py-3 md:py-4 text-left">
                                         <input 
                                             type="checkbox" 
                                             checked={selectedEmployees.length === currentPageUsers.length && currentPageUsers.length > 0}
@@ -269,11 +269,11 @@ function UserRoles() {
                                             className="w-4 h-4 rounded border-gray-300 text-[#000435] focus:ring-[#000435]"
                                         />
                                     </th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Employee Name</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Emp ID</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Contact</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                                    <th className="px-2 sm:px-4 md:px-6 py-3 md:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Employee Name</th>
+                                    <th className="px-2 sm:px-4 md:px-6 py-3 md:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Emp ID</th>
+                                    <th className="px-2 sm:px-4 md:px-6 py-3 md:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Contact</th>
+                                    <th className="px-2 sm:px-4 md:px-6 py-3 md:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Role</th>
+                                    <th className="px-2 sm:px-4 md:px-6 py-3 md:py-4 text-left text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -291,8 +291,8 @@ function UserRoles() {
                                     </tr>
                                 ) : (
                                     currentPageUsers.map((employee) => (
-                                    <tr key={employee.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
+                                    <tr key={employee.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-2 sm:px-4 md:px-6 py-3 md:py-4 text-left">
                                             <input 
                                                 type="checkbox"
                                                 checked={selectedEmployees.includes(employee.id)}
@@ -300,42 +300,40 @@ function UserRoles() {
                                                 className="w-4 h-4 rounded border-gray-300 text-[#000435] focus:ring-[#000435]"
                                             />
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-2 sm:px-4 md:px-6 py-3 md:py-4">
                                             <div>
-                                                <p className="text-sm font-semibold text-gray-900">{employee.name}</p>
+                                                <p className="text-xs sm:text-sm font-semibold text-gray-900">{employee.name}</p>
                                                 <p className="text-xs text-gray-500">{employee.position}</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm text-gray-900">{employee.empId}</span>
+                                        <td className="px-2 sm:px-4 md:px-6 py-3 md:py-4">
+                                            <span className="text-xs sm:text-sm text-gray-900">{employee.empId}</span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm text-gray-600">{employee.email}</span>
+                                        <td className="px-2 sm:px-4 md:px-6 py-3 md:py-4">
+                                            <span className="text-xs sm:text-sm text-gray-600 break-all">{employee.email}</span>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-2 sm:px-4 md:px-6 py-3 md:py-4">
                                             <div className="relative inline-block">
-                                                <select className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200">
+                                                <select className="appearance-none bg-white border border-gray-300 rounded-lg px-2 sm:px-4 py-1 sm:py-2 pr-6 sm:pr-8 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200">
                                                     <option selected={employee.role === 'admin'}>Admin</option>
                                                     <option selected={employee.role === 'manager'}>Manager</option>
                                                     <option selected={employee.role === 'staff'}>Staff</option>
                                                 </select>
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-3 h-3 sm:w-4 sm:h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                                 </svg>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="relative inline-block">
-                                                <button 
-                                                    onClick={() => handleEditUser(employee)}
-                                                    className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
-                                                >
-                                                    <span>Edit</span>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-3 h-3">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                        <td className="px-2 sm:px-4 md:px-6 py-3 md:py-4">
+                                            <button 
+                                                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
+                                                onClick={() => handleEditUser(employee)}
+                                                title="Edit user"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                </svg>
+                                            </button>
                                         </td>
                                     </tr>
                                     ))
@@ -345,9 +343,9 @@ function UserRoles() {
                     </div>
 
                     {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                            <div className="text-sm text-gray-700">
+                        {/* Pagination */}
+                        <div className="px-4 md:px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="text-sm text-gray-700 text-center sm:text-left">
                                 Showing <span className="font-semibold">{indexOfFirstUser + 1}</span> to{' '}
                                 <span className="font-semibold">
                                     {indexOfLastUser}
@@ -355,11 +353,11 @@ function UserRoles() {
                                 of <span className="font-semibold">{totalFilteredUsers}</span> users
                             </div>
                             
-                            <div className="flex space-x-2">
+                            <div className="flex flex-wrap justify-center gap-2">
                                 <button
                                     onClick={() => handlePageChange(currentPage - 1)}
                                     disabled={currentPage === 1}
-                                    className={`px-3 py-1 rounded border ${
+                                    className={`px-3 py-1 rounded border text-sm ${
                                         currentPage === 1
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -368,24 +366,32 @@ function UserRoles() {
                                     Previous
                                 </button>
                                 
-                                {[...Array(totalPages)].map((_, index) => (
-                                    <button
-                                        key={index + 1}
-                                        onClick={() => handlePageChange(index + 1)}
-                                        className={`px-3 py-1 rounded border ${
-                                            currentPage === index + 1
-                                                ? 'bg-[#000435] text-white'
-                                                : 'bg-white text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        {index + 1}
-                                    </button>
-                                ))}
+                                {/* Show limited page numbers on mobile */}
+                                <div className="hidden sm:flex gap-2">
+                                    {[...Array(totalPages)].map((_, index) => (
+                                        <button
+                                            key={index + 1}
+                                            onClick={() => handlePageChange(index + 1)}
+                                            className={`px-3 py-1 rounded border text-sm ${
+                                                currentPage === index + 1
+                                                    ? 'bg-[#000435] text-white'
+                                                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Mobile: Show current page indicator */}
+                                <div className="sm:hidden px-3 py-1 text-sm text-gray-700 font-medium">
+                                    Page {currentPage} of {totalPages}
+                                </div>
                                 
                                 <button
                                     onClick={() => handlePageChange(currentPage + 1)}
                                     disabled={currentPage === totalPages}
-                                    className={`px-3 py-1 rounded border ${
+                                    className={`px-3 py-1 rounded border text-sm ${
                                         currentPage === totalPages
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -395,7 +401,6 @@ function UserRoles() {
                                 </button>
                             </div>
                         </div>
-                    )}
                 </div>
             </div>
 
