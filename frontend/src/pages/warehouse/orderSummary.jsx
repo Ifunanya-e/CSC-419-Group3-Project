@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import WarehouseLayout from "../../components/warehouse/WarehouseLayout";
 import { useCart } from "../../context/CartContext";
-import { products, categories as productCategories } from "../../data/products";
+import { getAllProducts } from "../../api/products";
 
 function OrderSummary() {
     const { cart, addToCart, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -15,16 +15,55 @@ function OrderSummary() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
     const [showHoldSaleModal, setShowHoldSaleModal] = useState(false);
+    const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState(["All Products"]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Use all categories from products data
-    const categories = productCategories;
+    // Fetch products from API
+    useEffect(() => {
+        async function fetchProducts() {
+            try {
+                setIsLoading(true);
+                const data = await getAllProducts();
+                
+                // Map API fields to expected fields
+                const normalizedProducts = data.map(product => ({
+                    ...product,
+                    price: parseFloat(product.unit_price) || product.price || 0,
+                    stock: product.current_stock ?? product.stock ?? 0,
+                    name: product.name ?? product.product_name ?? 'Unnamed Product',
+                    category: product.category ?? product.category_name ?? 'Uncategorized'
+                }));
+                
+                setProducts(normalizedProducts);
+                
+                // Extract unique categories
+                const uniqueCategories = ["All Products", ...new Set(normalizedProducts.map(p => p.category).filter(Boolean))];
+                setCategories(uniqueCategories);
+            } catch (err) {
+                console.error("Failed to fetch products:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        
+        fetchProducts();
+    }, []);
+
+    // Calculate totals
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const tax = subtotal * 0.05;
     const total = subtotal + tax;
     const change = amountReceived ? parseFloat(amountReceived) - total : 0;
+    
+    // Check if payment is sufficient
+    const amountPaid = parseFloat(amountReceived);
+    const isPaymentValid = paymentMethod === "card" || 
+                          (paymentMethod === "cash" && !isNaN(amountPaid) && amountPaid >= total);
 
     const handleConfirmPayment = () => {
+        if (!isPaymentValid || cart.length === 0) return;
         setShowCheckoutModal(true);
     };
 
@@ -39,7 +78,7 @@ function OrderSummary() {
     const confirmCancelSale = () => {
         clearCart();
         setShowCancelModal(false);
-        navigate('/products');
+        navigate('/staff/products');
     };
 
     // Add stock status helper
@@ -59,9 +98,9 @@ function OrderSummary() {
 
     return (
         <WarehouseLayout>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 bg-gray-100 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 bg-gray-100 h-screen overflow-hidden">
                 {/* Left Column - Scan/Search Product */}
-                <div className="bg-white rounded-lg p-6 flex flex-col">
+                <div className="bg-white rounded-lg p-6 flex flex-col max-h-[calc(100vh-3rem)]">
                     <h2 className="text-xl font-bold text-gray-800 mb-4">Scan / Search Product</h2>
                     
                     {/* Search Input */}
@@ -82,65 +121,77 @@ function OrderSummary() {
                     </div>
 
                     {/* Category Filters */}
-                    <div className="flex space-x-2 mb-6">
-                        {categories.map((category) => (
-                            <button
-                                key={category}
-                                onClick={() => setActiveCategory(category)}
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                                    activeCategory === category
-                                        ? "bg-[#000435] text-white"
-                                        : "border-2 border-gray-300 text-gray-700 hover:border-[#000435]"
-                                }`}
-                            >
-                                {category}
-                            </button>
-                        ))}
+                    <div className="mb-6 overflow-x-auto">
+                        <div className="flex space-x-2 pb-2 min-w-max">
+                            {categories.map((category) => (
+                                <button
+                                    key={category}
+                                    onClick={() => setActiveCategory(category)}
+                                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
+                                        activeCategory === category
+                                            ? "bg-[#000435] text-white"
+                                            : "border-2 border-gray-300 text-gray-700 hover:border-[#000435]"
+                                    }`}
+                                >
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Product Grid */}
-                    <div className="grid grid-cols-2 gap-4">
-                        {searchedProducts.map((product) => {
-                            const stockStatus = getStockStatus(product.stock);
-                            return (
-                                <div 
-                                    key={product.id} 
-                                    onClick={() => addToCart(product)}
-                                    className="border-2 border-gray-200 rounded-lg p-3 hover:border-[#000435] transition-colors cursor-pointer"
-                                >
-                                    {/* Product Image */}
-                                    <div className="w-full h-20 bg-gray-100 rounded mb-2 flex items-center justify-center overflow-hidden">
-                                        {product.image ? (
-                                            <img 
-                                                src={product.image} 
-                                                alt={product.name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                        )}
+                    <div className="grid grid-cols-2 gap-4 overflow-auto flex-1">
+                        {isLoading ? (
+                            <div className="col-span-2 text-center py-8 text-gray-500">
+                                Loading products...
+                            </div>
+                        ) : searchedProducts.length === 0 ? (
+                            <div className="col-span-2 text-center py-8 text-gray-500">
+                                No products found
+                            </div>
+                        ) : (
+                            searchedProducts.map((product) => {
+                                const stockStatus = getStockStatus(product.stock || 0);
+                                return (
+                                    <div 
+                                        key={product.id} 
+                                        onClick={() => addToCart(product)}
+                                        className="border-2 border-gray-200 rounded-lg p-3 hover:border-[#000435] transition-colors cursor-pointer"
+                                    >
+                                        {/* Product Image */}
+                                        <div className="w-full h-20 bg-gray-100 rounded mb-2 flex items-center justify-center overflow-hidden">
+                                            {product.image ? (
+                                                <img 
+                                                    src={product.image} 
+                                                    alt={product.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        
+                                        <h3 className="font-semibold text-gray-800 text-sm mb-1">{product.name || 'Product'}</h3>
+                                        
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                                                stockStatus === 'in' 
+                                                    ? 'bg-green-100 text-green-700' 
+                                                    : stockStatus === 'low'
+                                                    ? 'bg-yellow-100 text-yellow-700'
+                                                    : 'bg-red-100 text-red-700'
+                                            }`}>
+                                                {stockStatus === 'in' ? 'In Stock' : stockStatus === 'low' ? 'Low Stock' : 'Out of Stock'}
+                                            </span>
+                                        </div>
+                                        
+                                        <p className="text-lg font-bold text-gray-900">${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}</p>
                                     </div>
-                                    
-                                    <h3 className="font-semibold text-gray-800 text-sm mb-1">{product.name}</h3>
-                                    
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                                            stockStatus === 'in' 
-                                                ? 'bg-green-100 text-green-700' 
-                                                : stockStatus === 'low'
-                                                ? 'bg-yellow-100 text-yellow-700'
-                                                : 'bg-red-100 text-red-700'
-                                        }`}>
-                                            {stockStatus === 'in' ? 'In Stock' : stockStatus === 'low' ? 'Low Stock' : 'Out of Stock'}
-                                        </span>
-                                    </div>
-                                    
-                                    <p className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</p>
-                                </div>
-                            );
-                        })}
+                                );
+                            })
+                        )}
                     </div>
                 </div>
 
@@ -151,8 +202,31 @@ function OrderSummary() {
                         <p className="text-sm text-gray-500">#007231</p>
                     </div>
 
+                    {/* Payment Summary */}
+                    <div className="border border-gray-200 rounded-lg p-4 mb-6">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Payment Summary</h3>
+                        
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Sub Price:</span>
+                                <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Tax (5%):</span>
+                                <span className="font-semibold text-gray-900">${tax.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                                <span className="text-gray-800">Total:</span>
+                                <span className="text-gray-900">${total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Cart Items */}
-                    <div className="flex-1 overflow-auto mb-6">
+                    <div className="flex-1 overflow-auto">
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                            Cart Items <span className="text-gray-500">({cart.length})</span>
+                        </h3>
                         {cart.length === 0 ? (
                             <p className="text-gray-500 text-center py-8">No items in cart</p>
                         ) : (
@@ -191,39 +265,17 @@ function OrderSummary() {
                             </div>
                         )}
                     </div>
-
-                    {/* Payment Summary */}
-                    <div className="border-t border-gray-200 pt-4">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Payment Summary</h3>
-                        
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Sub Price:</span>
-                                <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Tax (5%):</span>
-                                <span className="font-semibold text-gray-900">${tax.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                                <span className="text-gray-800">Total:</span>
-                                <span className="text-gray-900">${total.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Right Column - Checkout */}
                 <div className="bg-white rounded-lg p-6 flex flex-col">
-                    <div className="mb-6">
-                        <h2 className="text-xl font-bold text-gray-800">Checkout</h2>
-                        <p className="text-sm text-gray-500">#007231</p>
-                    </div>
+                    <h2 className="text-xl font-bold text-gray-800 mb-6">Payment</h2>
 
                     {/* Payment Method */}
                     <div className="mb-6">
-                        <h3 className="text-base font-bold text-gray-800 mb-3">Payment Method</h3>
-                        <div className="grid grid-cols-2 gap-3">
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">Payment Method:</label>
+                        
+                        <div className="grid grid-cols-2 gap-4">
                             <button
                                 onClick={() => setPaymentMethod("cash")}
                                 className={`p-4 rounded-lg border-2 transition-all ${
@@ -302,34 +354,29 @@ function OrderSummary() {
                         </label>
                     </div>
 
-                    {/* Confirm Payment Button */}
-                    <button
-                        onClick={handleConfirmPayment}
-                        disabled={cart.length === 0}
-                        className="w-full bg-[#000435] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-6"
-                    >
-                        Confirm Payment
-                    </button>
-
                     {/* Action Buttons */}
-                    <div className="grid grid-cols-3 gap-3 mt-auto">
+                    <div className="grid grid-cols-1 gap-3 mb-6">
                         <button
                             onClick={handleConfirmPayment}
-                            disabled={cart.length === 0}
-                            className="col-span-3 bg-[#000435] text-white py-3 rounded-lg font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+                            disabled={cart.length === 0 || !isPaymentValid}
+                            className={`py-3 rounded-lg font-bold transition-opacity ${
+                                cart.length === 0 || !isPaymentValid
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-[#000435] text-white hover:opacity-90'
+                            }`}
                         >
                             CHECKOUT
                         </button>
                         <button
                             onClick={handleHoldSale}
                             disabled={cart.length === 0}
-                            className="col-span-3 bg-gray-300 text-gray-800 py-3 rounded-lg font-bold hover:bg-gray-400 transition-colors disabled:opacity-50"
+                            className="bg-gray-300 text-gray-800 py-3 rounded-lg font-bold hover:bg-gray-400 transition-colors disabled:opacity-50"
                         >
                             Hold Sale
                         </button>
                         <button
                             onClick={handleCancelSale}
-                            className="col-span-3 bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors"
+                            className="bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors"
                         >
                             Cancel Sale
                         </button>
@@ -380,7 +427,7 @@ function OrderSummary() {
                             onClick={() => {
                                 setShowCheckoutModal(false);
                                 clearCart();
-                                navigate('/products');
+                                navigate('/staff/products');
                             }}
                             className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
                         >
@@ -410,6 +457,41 @@ function OrderSummary() {
                         >
                             OK
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Hold Sale Modal */}
+            {showHoldSaleModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+                        <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">Hold Sale</h2>
+                        <p className="text-gray-600 mb-6 text-center">This sale will be saved for later. You can resume it anytime.</p>
+                        
+                        <div className="flex space-x-3">
+                            <button 
+                                onClick={() => setShowHoldSaleModal(false)}
+                                className="flex-1 bg-gray-200 text-gray-800 py-2.5 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    // In a real app, you'd save the cart state here
+                                    setShowHoldSaleModal(false);
+                                    clearCart();
+                                    navigate('/staff/products');
+                                }}
+                                className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                            >
+                                Confirm
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

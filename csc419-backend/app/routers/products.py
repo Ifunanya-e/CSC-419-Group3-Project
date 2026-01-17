@@ -65,12 +65,12 @@ def get_product(
 
 @router.patch("/{product_id}", response_model=ProductRead)
 def update_product(
-    id: int,
+    product_id: int,
     product_in: ProductCreate,
     session: Session = Depends(get_session),
     current_user=Depends(require_admin_or_manager)
 ):
-    product = session.get(Product, id)
+    product = session.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
@@ -88,11 +88,11 @@ def update_product(
 
 @router.delete("/{product_id}", status_code=204)
 def delete_product(
-    id: int,
+    product_id: int,
     session: Session = Depends(get_session),
     current_user=Depends(require_admin)
 ):
-    product = session.get(Product, id)
+    product = session.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     

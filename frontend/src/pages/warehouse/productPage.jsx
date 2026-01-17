@@ -1,13 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import WarehouseLayout from "../../components/warehouse/WarehouseLayout";
 import { useCart } from "../../context/CartContext";
-import { products, categories } from "../../data/products";
+import { getAllProducts } from "../../api/products";
 
 function ProductPage() {
     const [activeCategory, setActiveCategory] = useState("All Products");
+    const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState(["All Products"]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
     const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
     const navigate = useNavigate();
+
+    // Fetch products from API
+    useEffect(() => {
+        async function fetchProducts() {
+            try {
+                setIsLoading(true);
+                const data = await getAllProducts();
+                
+                // Map API fields to expected fields
+                const normalizedProducts = data.map(product => ({
+                    ...product,
+                    // Map backend field names to frontend expected names
+                    price: parseFloat(product.unit_price) || product.price || 0,
+                    stock: product.current_stock ?? product.stock ?? product.quantity_in_stock ?? product.quantity ?? 0,
+                    name: product.name ?? product.product_name ?? 'Unnamed Product',
+                    category: product.category ?? product.category_name ?? 'Uncategorized'
+                }));
+                
+                setProducts(normalizedProducts);
+                
+                // Extract unique categories from products
+                const uniqueCategories = ["All Products", ...new Set(normalizedProducts.map(p => p.category).filter(Boolean))];
+                setCategories(uniqueCategories);
+                setError(null);
+            } catch (err) {
+                console.error("Failed to fetch products:", err);
+                setError("Failed to load products. Please try again.");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        
+        fetchProducts();
+    }, []);
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const tax = subtotal * 0.05;
@@ -19,7 +57,39 @@ function ProductPage() {
 
     return (
         <WarehouseLayout>
-            <div className="flex h-full bg-gray-100">
+            {/* Loading State */}
+            {isLoading && (
+                <div className="flex items-center justify-center h-screen bg-gray-100">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#000435] mx-auto mb-4"></div>
+                        <p className="text-gray-600">Loading products...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Error State */}
+            {error && !isLoading && (
+                <div className="flex items-center justify-center h-screen bg-gray-100">
+                    <div className="bg-white p-8 rounded-lg shadow-md max-w-md">
+                        <div className="text-red-600 mb-4">
+                            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <p className="text-gray-800 text-center mb-4">{error}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="w-full bg-[#000435] text-white py-2 rounded-lg hover:opacity-90"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Product Grid - Only show when not loading and no error */}
+            {!isLoading && !error && (
+                <div className="flex h-full bg-gray-100">
                 {/* Main Content - Product Grid */}
                 <div className="flex-1 my-3 p-6 bg-white rounded-lg overflow-auto ml-8">
                     {/* Category Tabs */}
@@ -61,16 +131,16 @@ function ProductPage() {
                                 
                                 {/* Product Info */}
                                 <div className="p-4">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-1">{product.name}</h3>
-                                    <p className="text-sm text-gray-500 mb-3">{product.category}</p>
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-1">{product.name || 'Unnamed Product'}</h3>
+                                    <p className="text-sm text-gray-500 mb-3">{product.category || 'Uncategorized'}</p>
                                     
                                     <div className="flex justify-between items-center mb-4">
-                                        <span className="text-xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
+                                        <span className="text-xl font-bold text-gray-900">${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}</span>
                                         <span className="flex items-center text-gray-600">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                             </svg>
-                                            <span className="text-sm">{product.stock}</span>
+                                            <span className="text-sm">{product.stock ?? 0}</span>
                                         </span>
                                     </div>
                                     
@@ -121,8 +191,8 @@ function ProductPage() {
                                     
                                     {/* Product Details */}
                                     <div className="flex-1">
-                                        <h4 className="font-semibold text-gray-800">{item.name}</h4>
-                                        <p className="text-sm font-semibold text-gray-900 mt-1">${item.price.toFixed(2)}</p>
+                                        <h4 className="font-semibold text-gray-800">{item.name || 'Product'}</h4>
+                                        <p className="text-sm font-semibold text-gray-900 mt-1">${typeof item.price === 'number' ? item.price.toFixed(2) : '0.00'}</p>
                                         
                                         {/* Quantity Controls */}
                                         <div className="flex items-center space-x-2 mt-2">
@@ -132,7 +202,7 @@ function ProductPage() {
                                             >
                                                 -
                                             </button>
-                                            <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                                            <span className="w-8 text-center text-sm font-medium">{item.quantity || 0}</span>
                                             <button 
                                                 onClick={() => updateQuantity(item.id, 1)}
                                                 className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center text-gray-600 hover:bg-gray-300"
@@ -162,15 +232,15 @@ function ProductPage() {
                             <div className="space-y-2 mb-4">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Sub Price:</span>
-                                    <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
+                                    <span className="font-semibold text-gray-900">${(subtotal || 0).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Tax (5%):</span>
-                                    <span className="font-semibold text-gray-900">${tax.toFixed(2)}</span>
+                                    <span className="font-semibold text-gray-900">${(tax || 0).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-base font-bold pt-2 border-t">
                                     <span className="text-gray-800">Total:</span>
-                                    <span className="text-gray-900">${total.toFixed(2)}</span>
+                                    <span className="text-gray-900">${(total || 0).toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
@@ -179,7 +249,7 @@ function ProductPage() {
 
                         {/* Proceed to Summary */}
                         <button 
-                            onClick={() => navigate('/order-summary')}
+                            onClick={() => navigate('/staff/order-summary')}
                             className="w-full bg-[#000435] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
                         >
                             Proceed to Summary
@@ -188,6 +258,7 @@ function ProductPage() {
                     </div>
                 )}
             </div>
+            )}
         </WarehouseLayout>
     );
 }

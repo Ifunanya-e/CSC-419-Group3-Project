@@ -1,12 +1,105 @@
 import { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { useAuth } from '../../context/AuthContext';
+import { updateMyPassword } from '../../api/users';
+import { FaCheck, FaTimes } from 'react-icons/fa';
 
 function Settings() {
+    const { user } = useAuth();
     const [darkMode, setDarkMode] = useState(false);
     const [language, setLanguage] = useState('ENGLISH');
     const [dataCacheDuration, setDataCacheDuration] = useState('5 mins');
     const [dashboardAutoRefresh, setDashboardAutoRefresh] = useState('OFF');
     const [inventoryStrategy, setInventoryStrategy] = useState('Real-time');
+    
+    // Password Modal State
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [passwordErrors, setPasswordErrors] = useState([]);
+    const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+    const [passwordUpdateError, setPasswordUpdateError] = useState('');
+    const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false);
+
+    // Password validation function (from RegisterForm)
+    function validatePassword(password) {
+        const errors = [];
+        
+        if (!/[A-Z]/.test(password)) {
+            errors.push("Must include a Capital Letter");
+        }
+        if (!/[a-z]/.test(password)) {
+            errors.push("Must include small letters");
+        }
+        if (!/[0-9]/.test(password)) {
+            errors.push("Must include a digit");
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            errors.push("Must include symbols");
+        }
+        if (password.length < 8) {
+            errors.push("Must be at least 8 characters");
+        }
+        
+        return errors;
+    }
+
+    const getRequirementStatus = (requirement) => {
+        return !passwordErrors.includes(requirement);
+    };
+
+    function handleNewPasswordChange(e) {
+        const newPassword = e.target.value;
+        setPasswordData(prev => ({ ...prev, newPassword }));
+        setPasswordErrors(validatePassword(newPassword));
+    }
+
+    async function handlePasswordUpdate(e) {
+        e.preventDefault();
+        setPasswordUpdateError('');
+        setPasswordUpdateSuccess(false);
+
+        // Validate new password
+        const errors = validatePassword(passwordData.newPassword);
+        if (errors.length > 0) {
+            setPasswordErrors(errors);
+            setShowPasswordRequirements(true);
+            setPasswordUpdateError('Please meet all password requirements');
+            return;
+        }
+
+        // Check if passwords match
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setPasswordUpdateError('New passwords do not match');
+            return;
+        }
+
+        try {
+            setIsUpdatingPassword(true);
+            await updateMyPassword({
+                current_password: passwordData.currentPassword,
+                new_password: passwordData.newPassword
+            });
+            
+            setPasswordUpdateSuccess(true);
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setPasswordErrors([]);
+            
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                setShowPasswordModal(false);
+                setPasswordUpdateSuccess(false);
+            }, 2000);
+        } catch (error) {
+            setPasswordUpdateError(error.message);
+        } finally {
+            setIsUpdatingPassword(false);
+        }
+    }
 
     return (
         <AdminLayout>
@@ -38,11 +131,11 @@ function Settings() {
                         {/* Profile Picture and Name */}
                         <div className="flex items-center space-x-4">
                             <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                                AD
+                                {user?.full_name?.charAt(0).toUpperCase() || 'U'}
                             </div>
                             <div>
-                                <p className="text-xs text-gray-600 mb-1">Admin</p>
-                                <p className="text-lg font-bold text-gray-900">Alex Daniels</p>
+                                <p className="text-xs text-gray-600 mb-1">{user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) || 'User'}</p>
+                                <p className="text-lg font-bold text-gray-900">{user?.full_name || 'User Name'}</p>
                             </div>
                         </div>
 
@@ -55,7 +148,7 @@ function Settings() {
                         {/* Company Email */}
                         <div className="flex items-center justify-between md:col-span-1">
                             <span className="text-sm text-gray-700">Company Email:</span>
-                            <span className="text-sm font-semibold text-gray-900">oladiramustapha@mail.com</span>
+                            <span className="text-sm font-semibold text-gray-900">{user?.email || 'N/A'}</span>
                         </div>
 
                         {/* Warehouse Location */}
@@ -87,7 +180,10 @@ function Settings() {
                         {/* Password */}
                         <div className="pt-6 md:pt-0 md:px-6">
                             <h4 className="text-sm font-semibold text-gray-700 mb-4 underline">Password</h4>
-                            <button className="w-full px-6 py-3 bg-[#000435] text-white rounded-lg hover:bg-[#000525] transition-colors font-medium text-sm">
+                            <button 
+                                onClick={() => setShowPasswordModal(true)}
+                                className="w-full px-6 py-3 bg-[#000435] text-white rounded-lg hover:bg-[#000525] transition-colors font-medium text-sm"
+                            >
                                 User Password Reset
                             </button>
                         </div>
@@ -259,6 +355,151 @@ function Settings() {
                     </div>
                 </div>
             </div>
+
+            {/* Password Reset Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">Reset Password</h2>
+                        
+                        {passwordUpdateSuccess ? (
+                            <div className="text-center py-8">
+                                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                    <FaCheck className="w-8 h-8 text-green-600" />
+                                </div>
+                                <p className="text-green-600 font-semibold">Password updated successfully!</p>
+                            </div>
+                        ) : (
+                            <form onSubmit={handlePasswordUpdate}>
+                                {passwordUpdateError && (
+                                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                                        {passwordUpdateError}
+                                    </div>
+                                )}
+
+                                {/* Current Password */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Current Password:
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={passwordData.currentPassword}
+                                        onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                                        className="w-full rounded-lg border-2 border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#000435] focus:border-[#000435]"
+                                        required
+                                    />
+                                </div>
+
+                                {/* New Password */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        New Password:
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={passwordData.newPassword}
+                                        onChange={handleNewPasswordChange}
+                                        onFocus={() => setShowPasswordRequirements(true)}
+                                        className="w-full rounded-lg border-2 border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#000435] focus:border-[#000435]"
+                                        required
+                                    />
+                                    
+                                    {/* Password Requirements */}
+                                    {showPasswordRequirements && passwordData.newPassword && (
+                                        <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                                            <p className="text-xs font-semibold text-gray-700 mb-2">Password Requirements:</p>
+                                            
+                                            <div className="space-y-1.5">
+                                                <div className={`flex items-center gap-2 text-xs ${getRequirementStatus("Must include a Capital Letter") ? "text-green-600" : "text-red-600"}`}>
+                                                    {getRequirementStatus("Must include a Capital Letter") ? <FaCheck /> : <FaTimes />}
+                                                    <span>Must include a Capital Letter</span>
+                                                </div>
+                                                
+                                                <div className={`flex items-center gap-2 text-xs ${getRequirementStatus("Must include small letters") ? "text-green-600" : "text-red-600"}`}>
+                                                    {getRequirementStatus("Must include small letters") ? <FaCheck /> : <FaTimes />}
+                                                    <span>Must include small letters</span>
+                                                </div>
+                                                
+                                                <div className={`flex items-center gap-2 text-xs ${getRequirementStatus("Must include a digit") ? "text-green-600" : "text-red-600"}`}>
+                                                    {getRequirementStatus("Must include a digit") ? <FaCheck /> : <FaTimes />}
+                                                    <span>Must include a digit</span>
+                                                </div>
+                                                
+                                                <div className={`flex items-center gap-2 text-xs ${getRequirementStatus("Must include symbols") ? "text-green-600" : "text-red-600"}`}>
+                                                    {getRequirementStatus("Must include symbols") ? <FaCheck /> : <FaTimes />}
+                                                    <span>Must include symbols (!@#$%^&*...)</span>
+                                                </div>
+                                                
+                                                <div className={`flex items-center gap-2 text-xs ${getRequirementStatus("Must be at least 8 characters") ? "text-green-600" : "text-red-600"}`}>
+                                                    {getRequirementStatus("Must be at least 8 characters") ? <FaCheck /> : <FaTimes />}
+                                                    <span>Must be at least 8 characters</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Confirm New Password */}
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Confirm New Password:
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={passwordData.confirmPassword}
+                                        onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                        className="w-full rounded-lg border-2 border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#000435] focus:border-[#000435]"
+                                        required
+                                    />
+                                    
+                                    {/* Password Match Indicator */}
+                                    {passwordData.confirmPassword && passwordData.newPassword && (
+                                        <div className="mt-2">
+                                            {passwordData.newPassword === passwordData.confirmPassword ? (
+                                                <p className="text-xs text-green-600 flex items-center gap-1">
+                                                    <FaCheck /> Passwords match
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-red-600 flex items-center gap-1">
+                                                    <FaTimes /> Passwords do not match
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Buttons */}
+                                <div className="flex space-x-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowPasswordModal(false);
+                                            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                                            setPasswordErrors([]);
+                                            setPasswordUpdateError('');
+                                        }}
+                                        className="flex-1 bg-gray-200 text-gray-800 py-2.5 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isUpdatingPassword}
+                                        className={`flex-1 py-2.5 rounded-lg font-semibold transition-colors ${
+                                            isUpdatingPassword
+                                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                                : 'bg-[#000435] text-white hover:bg-[#000525]'
+                                        }`}
+                                    >
+                                        {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 }

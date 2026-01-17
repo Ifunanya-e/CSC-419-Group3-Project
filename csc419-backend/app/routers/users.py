@@ -58,12 +58,12 @@ def get_user(
 
 @router.patch("/{user_id}", response_model=UserRead)
 def update_user(
-    id: int,
+    user_id: int,
     user_in: UserUpdate,
     session: Session = Depends(get_session),
     current_user=Depends(require_admin)
 ):
-    user = session.get(User, id)
+    user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -93,11 +93,11 @@ def update_my_password(
 
 @router.delete("/{user_id}", status_code=204)
 def delete_user(
-    id: int,
+    user_id: int,
     session: Session = Depends(get_session),
     current_user=Depends(require_admin)
 ):
-    user = session.get(User, id)
+    user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     

@@ -1,15 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import WarehouseLayout from "../../components/warehouse/WarehouseLayout";
+import { useAuth } from "../../context/AuthContext";
+import { getLowStockProducts } from "../../api/products";
 
 function Dashboard() {
     const navigate = useNavigate();
-    const [StockAlerts] = useState([
-        { name: "Item 1", status: "low" },
-        { name: "Item 2", status: "low" },
-        { name: "Item 3", status: "low" },
-        { name: "Item 4", status: "low" },
-    ]);
+    const { user } = useAuth();
+    const [lowStockCount, setLowStockCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch low stock products on component mount
+    useEffect(() => {
+        async function fetchDashboardData() {
+            try {
+                setIsLoading(true);
+                const lowStock = await getLowStockProducts();
+                // Count the number of low stock items
+                setLowStockCount(Array.isArray(lowStock) ? lowStock.length : 0);
+            } catch (error) {
+                console.error("Failed to fetch dashboard data:", error);
+                setLowStockCount(0);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchDashboardData();
+    }, []);
 
     return (
         <WarehouseLayout>
@@ -47,8 +65,14 @@ function Dashboard() {
                                 <polyline points="10,90 20,40 30,60 40,20 50,50 60,30 70,70 80,10 90,80" fill="none" stroke="#ef4444" strokeWidth="2"/>
                             </svg>
                         </div>
-                        <p className="text-red-600 font-bold text-xl">4 Stocks are</p>
-                        <p className="text-red-600 font-bold text-xl">LOW</p>
+                        {isLoading ? (
+                            <p className="text-gray-600 font-semibold text-sm md:text-base">Loading...</p>
+                        ) : (
+                            <>
+                                <p className="text-red-600 font-bold text-xl">{lowStockCount} {lowStockCount === 1 ? 'Stock is' : 'Stocks are'}</p>
+                                <p className="text-red-600 font-bold text-xl">LOW</p>
+                            </>
+                        )}
                     </div>
 
                     {/* Pending Shipment Card */}
@@ -78,38 +102,29 @@ function Dashboard() {
                 </div>
 
                 {/* Activity Feed */}
-                <div className="bg-white rounded-lg p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-gray-800">Activity Feed</h2>
-                        <button className="text-blue-600 font-semibold hover:underline">
-                            Expand
-                        </button>
-                    </div>
-
-                    <div className="space-y-6">
-                        {/* Activity Item 1 */}
-                        <div className="flex items-start space-x-4">
-                            <div className="flex flex-col items-center">
-                                <div className="w-3 h-3 bg-[#000435] rounded-full"></div>
-                                <div className="w-0.5 h-16 bg-gray-300"></div>
-                            </div>
-                            <div className="flex-1">
-                                <p className="font-semibold text-gray-800">Purchase for washing machine</p>
-                                <p className="text-sm text-gray-600">09 March, 2025</p>
-                                <p className="text-xs text-gray-500">13:00</p>
-                            </div>
+                {/* Activity Feed */}
+                <div className="bg-white rounded-lg p-6 shadow-sm">
+                    <h2 className="text-xl font-bold text-gray-800 mb-4">Activity Feed</h2>
+                    <div className="space-y-3">
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <p className="text-gray-700 text-sm">Stock check completed</p>
                         </div>
-
-                        {/* Activity Item 2 */}
-                        <div className="flex items-start space-x-4">
-                            <div className="flex flex-col items-center">
-                                <div className="w-3 h-3 bg-[#000435] rounded-full"></div>
-                            </div>
-                            <div className="flex-1">
-                                <p className="font-semibold text-gray-800">Restock</p>
-                                <p className="text-sm text-gray-600">09 March, 2025</p>
-                                <p className="text-xs text-gray-500">13:00</p>
-                            </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <p className="text-gray-700 text-sm">New shipment received</p>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                            <p className="text-gray-700 text-sm">Low stock alert for 3 items</p>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <p className="text-gray-700 text-sm">Order #12345 processed</p>
+                        </div>
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            <p className="text-gray-700 text-sm">Urgent: Restock needed</p>
                         </div>
                     </div>
                 </div>

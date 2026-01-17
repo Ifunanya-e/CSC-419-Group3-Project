@@ -1,19 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { getAllProducts } from '../../api/products';
 
 function ProductsCategories() {
-    const [products] = useState([
-        { id: 1, name: 'Pack of shirts', category: 'Clothing', sku: '#100043', price: '$200.00', stock: 125, status: 'In Stock' },
-        { id: 2, name: 'Waffle Maker', category: 'Electronics', sku: '#100323', price: '$32.00', stock: 20, status: 'Low Stock' },
-        { id: 3, name: 'Blender', category: 'Electronics', sku: '#100053', price: '$41.00', stock: 94, status: 'In Stock' },
-        { id: 4, name: 'Cushion', category: 'Furniture', sku: '#100048', price: '$500.00', stock: 0, status: 'Out of Stock' },
-        { id: 5, name: 'Olive Oil', category: 'Food & Bev', sku: '#100321', price: '$10.00', stock: 132, status: 'In Stock' },
-        { id: 6, name: 'Brown Belt', category: 'Clothing', sku: '#100963', price: '$5.00', stock: 200, status: 'In Stock' },
-        { id: 7, name: 'Tank Top', category: 'Clothing', sku: '#100921', price: '$5.00', stock: 250, status: 'In Stock' },
-    ]);
-
+    const [products, setProducts] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
+
+    // Fetch products from API
+    useEffect(() => {
+        async function fetchProducts() {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const data = await getAllProducts();
+                
+                // Map API data to expected format
+                const mappedProducts = data.map(product => {
+                    let status = 'In Stock';
+                    if (product.current_stock === 0) {
+                        status = 'Out of Stock';
+                    } else if (product.current_stock < 20) {
+                        status = 'Low Stock';
+                    }
+                    
+                    return {
+                        id: product.id,
+                        name: product.name,
+                        category: product.category || 'Uncategorized',
+                        sku: product.sku,
+                        price: typeof product.unit_price === 'string' && product.unit_price.includes('$') 
+                            ? product.unit_price 
+                            : `$${parseFloat(product.unit_price || 0).toFixed(2)}`,
+                        stock: product.current_stock,
+                        status: status
+                    };
+                });
+                
+                setProducts(mappedProducts);
+            } catch (error) {
+                console.error("Failed to fetch products:", error);
+                setError("Failed to load products");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchProducts();
+    }, []);
 
     const toggleSelectProduct = (id) => {
         setSelectedProducts(prev => 
@@ -129,14 +164,41 @@ function ProductsCategories() {
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Product Name</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Categories</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">SKU</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Price</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Stock</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {products.map((product) => (
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                                            <div className="flex items-center justify-center space-x-2">
+                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#000435]"></div>
+                                                <span>Loading products...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : error ? (
+                                    <tr>
+                                        <td colSpan="8" className="px-6 py-12 text-center">
+                                            <div className="text-red-600">
+                                                <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <p className="font-semibold">{error}</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : products.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                                            No products found
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    products.map((product) => (
                                     <tr key={product.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4">
                                             <input 
@@ -181,7 +243,8 @@ function ProductsCategories() {
                                             </button>
                                         </td>
                                     </tr>
-                                ))}
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

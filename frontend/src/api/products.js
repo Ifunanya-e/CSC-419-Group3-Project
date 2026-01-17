@@ -1,5 +1,15 @@
 import api from "./client";
 
+export async function getAllProducts() {
+  try {
+    const response = await api.get("/products/");
+    return response.data;
+  } catch (error) {
+    console.error("Get products error:", error);
+    throw error;
+  }
+}
+
 export async function searchProducts(query) {
   try {
     const response = await api.get("/products/search", {

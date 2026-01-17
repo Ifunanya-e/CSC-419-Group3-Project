@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 function AdminNavBar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     return (
         <div className="bg-white w-full py-4 px-6 border-b border-gray-200">
@@ -17,7 +19,7 @@ function AdminNavBar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
                         </svg>
                     </button>
                     
-                    <h1 className="text-xl font-semibold text-gray-800">Hello, Alex</h1>
+                    <h1 className="text-xl font-semibold text-gray-800">Hello, {user?.full_name?.split(' ')[0] || 'User'}</h1>
                 </div>
 
                 {/* Center - Search Bar */}
