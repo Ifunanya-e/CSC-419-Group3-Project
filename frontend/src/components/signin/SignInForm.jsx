@@ -27,12 +27,15 @@ async function handleSubmit(e) {
     // Navigate based on user role
     const userRole = result.user?.role?.toLowerCase(); // Convert to lowercase for comparison
     
-    if (userRole === "manager" || userRole === "admin") {
+    if (userRole === "admin") {
+      console.log("Navigating to admin dashboard");
+      navigate("/admin/dashboard");
+    } else if (userRole === "manager") {
       console.log("Navigating to manager dashboard");
       navigate("/manager-dashboard");
     } else {
       console.log("Navigating to staff dashboard");
-      navigate("/dashboard");
+      navigate("/staff/dashboard");
     }
   } catch (err) {
     console.error("Login error:", err);

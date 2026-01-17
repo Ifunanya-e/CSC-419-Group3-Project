@@ -1,13 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 function Sidebar({ isExpanded: propIsExpanded, setIsExpanded, isMobileMenuOpen, setIsMobileMenuOpen }) {
     const [isExpanded, setIsExpandedLocal] = useState(false);
     const location = useLocation();
+    const { user } = useAuth();
 
     // Use parent state if provided, otherwise use local state
     const expanded = propIsExpanded !== undefined ? propIsExpanded : isExpanded;
     const setExpanded = setIsExpanded || setIsExpandedLocal;
+
+    // Get user data with fallbacks
+    const displayUser = {
+        name: user?.full_name || user?.name || "User",
+        email: user?.email || "user@example.com",
+        profilePicture: user?.profile_picture || user?.avatar || null,
+        initials: user?.full_name 
+            ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+            : (user?.name ? user.name[0].toUpperCase() : "U"),
+        role: user?.role || "Staff"
+    };
 
     useEffect(() => {
         const handleResize = () => {
@@ -22,8 +35,6 @@ function Sidebar({ isExpanded: propIsExpanded, setIsExpanded, isMobileMenuOpen, 
     const menuItems = [
         { name: 'Dashboard', icon: 'dashboard', page: 'dashboard', path: '/staff/dashboard' },
         { name: 'Inventory Management', icon: 'inventory', page: 'products', path: '/staff/products' },
-        { name: 'Shipment', icon: 'shipment', page: 'shipment', path: '/staff/shipment' },
-        { name: 'Cashier', icon: 'cashier', page: 'cashier', path: '/staff/cashier' },
     ];
 
     const getIcon = (iconName) => {
@@ -115,14 +126,23 @@ function Sidebar({ isExpanded: propIsExpanded, setIsExpanded, isMobileMenuOpen, 
             {/* User Profile at Bottom */}
             <div className="absolute bottom-6 left-0 right-0 px-3">
                 <div className={`flex flex-col items-center ${expanded ? 'space-x-3' : 'justify-center'} p-3 rounded-lg bg-gray-800`}>
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                        A
-                    </div>
+                    {/* Profile Picture or Initials */}
+                    {displayUser.profilePicture ? (
+                        <img 
+                            src={displayUser.profilePicture} 
+                            alt={displayUser.name}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                            {displayUser.initials}
+                        </div>
+                    )}
                     {expanded && (
                         <div className="flex-1 text-center">
-                            <p className="text-sm font-semibold">Staff</p>
-                            <p className="text-gray-400">Ayo Bankole</p>
-                            <p className="text-sm text-gray-400">oladiramustapha@gmail.com</p>
+                            <p className="text-sm font-semibold capitalize">{displayUser.role}</p>
+                            <p className="text-gray-400">{displayUser.name}</p>
+                            <p className="text-sm text-gray-400 truncate">{displayUser.email}</p>
                         </div>
                     )}
                 </div>

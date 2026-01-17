@@ -1,6 +1,9 @@
 import logo from "../../assets/Group1.png"
+import { useAuth } from "../../context/AuthContext"
 
 function navBar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
+    const { user } = useAuth();
+    const userName = user?.full_name || user?.name || "User";
     return (
         <div className="bg-white w-full py-3 border-b border-gray-200">
             <div className="flex items-center justify-between lg:justify-around px-4 md:px-6">
@@ -31,7 +34,7 @@ function navBar({ isMobileMenuOpen, setIsMobileMenuOpen }) {
                 {/* User Profile - Hidden on small mobile */}
                 <p className="hidden sm:flex flex-col text-right">
                     <span className="font-semibold text-gray-800 text-sm md:text-xl">Cashier</span>
-                    <span className="text-xs md:text-sm text-gray-600">Ayo Bankole</span>
+                    <span className="text-xs md:text-sm text-gray-600">{userName}</span>
                 </p>
                 
                 <section className="flex space-x-2 md:space-x-4">
