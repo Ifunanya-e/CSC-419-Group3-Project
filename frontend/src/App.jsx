@@ -15,7 +15,7 @@ import Settings from "./pages/admin/Settings";
 import { CartProvider } from "./context/CartContext";
 import SignIn from "./pages/SignIn";
 import ReceiveItems from "./pages/ReceiveItems";
-import Settings from "./pages/Settings";
+// import Settings from "./pages/Settings";
 
 function App() {
   return (
