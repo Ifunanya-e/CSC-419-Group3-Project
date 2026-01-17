@@ -9,6 +9,7 @@ import Pickup from "./pages/warehouse/pickup";
 import { CartProvider } from "./context/CartContext";
 import SignIn from "./pages/SignIn";
 import ReceiveItems from "./pages/ReceiveItems";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -23,7 +24,8 @@ function App() {
           <Route path="/manager-dashboard" element={<ManagerDashboard />} />
           <Route path="/inventory-management" element={<InventoryManagement />} />
           <Route path="/receive-items" element={<ReceiveItems />} />
-          
+          <Route path="/settings" element={<Settings />} />
+
           {/* Warehouse routes */}
           <Route path="/products" element={<ProductPage />} />
           <Route path="/order-summary" element={<OrderSummary />} />
