@@ -11,11 +11,11 @@ import StoresRegisters from "./pages/admin/StoresRegisters";
 import UserRoles from "./pages/admin/UserRoles";
 import ProductsCategories from "./pages/admin/ProductsCategories";
 import Reports from "./pages/admin/Reports";
-import Settings from "./pages/admin/Settings";
+import AdminSettings from "./pages/admin/Settings";
 import { CartProvider } from "./context/CartContext";
 import SignIn from "./pages/SignIn";
 import ReceiveItems from "./pages/ReceiveItems";
-// import Settings from "./pages/Settings";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -43,7 +43,7 @@ function App() {
           <Route path="/admin/users" element={<UserRoles />} />
           <Route path="/admin/products" element={<ProductsCategories />} />
           <Route path="/admin/reports" element={<Reports />} />
-          <Route path="/admin/settings" element={<Settings />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
          
 
           <Route path="*" element={<Navigate to="/signin" replace />} />

@@ -78,9 +78,12 @@ export default function OnboardingFlow() {
       // Navigate based on role
       const userRole = formData.role?.toLowerCase();
       
-      if (userRole === "manager" || userRole === "admin") {
+      if (userRole === "manager") {
         console.log("Navigating to manager dashboard");
         navigate("/manager-dashboard");
+      } else if (userRole === "admin") {
+        console.log("Navigating to admin dashboard");
+        navigate("/admin-dashboard");
       } else {
         console.log("Navigating to staff dashboard");
         navigate("/dashboard");
